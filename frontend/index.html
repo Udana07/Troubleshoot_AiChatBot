@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Troubleshooting Assistant</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body data-api-base="">
+    <div class="app-shell">
+      <header>
+        <h1>Troubleshooting Assistant</h1>
+        <p>Describe the error you are seeing and get actionable fix steps.</p>
+      </header>
+
+      <main>
+        <form id="query-form" class="card">
+          <label for="query-input">Error description</label>
+          <input
+            id="query-input"
+            type="text"
+            name="query"
+            placeholder="e.g. My PC shows CRITICAL_PROCESS_DIED after startup"
+            required
+            autocomplete="off"
+          />
+
+          <label for="category-select">Category (optional)</label>
+          <select id="category-select" name="category">
+            <option value="">All categories</option>
+            <option value="BSOD">BSOD</option>
+            <option value="NETWORK">Network</option>
+            <option value="DRIVER">Driver</option>
+          </select>
+
+          <button type="submit">Get fix</button>
+        </form>
+
+        <section id="status" class="status" hidden></section>
+
+        <section id="results" class="card" hidden>
+          <h2>Recommended steps</h2>
+          <ol id="steps-list"></ol>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js" type="module"></script>
+  </body>
+</html>

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import CrossEncoder, SentenceTransformer
 import chromadb
@@ -34,6 +35,13 @@ encoder = SentenceTransformer(MODEL_NAME)
 reranker = CrossEncoder(RERANKER_NAME)
 collection = _load_collection()
 app = FastAPI(title="Troubleshooting Assistant")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=False,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class QueryRequest(BaseModel):
@@ -41,9 +49,20 @@ class QueryRequest(BaseModel):
     category: Optional[str] = None
 
 
+class Step(BaseModel):
+    id: str
+    text: str
+    error_code: Optional[str] = None
+    category: Optional[str] = None
+    risk: Optional[str] = None
+    source: Optional[str] = None
+    parent_id: Optional[str] = None
+
+
 class QueryResponse(BaseModel):
     prompt: str
     sources: List[str]
+    steps: List[Step]
 
 
 class ErrorResponse(BaseModel):
@@ -109,7 +128,20 @@ def troubleshoot(payload: QueryRequest):
         raise HTTPException(status_code=404, detail="No matching passages found")
     passages = [item[0] for item in ranked]
     prompt = build_prompt(payload.query, passages)
+    steps = [
+        Step(
+            id=p["id"],
+            text=p["text"],
+            error_code=p["meta"].get("error_code"),
+            category=p["meta"].get("category"),
+            risk=p["meta"].get("risk"),
+            source=p["meta"].get("source"),
+            parent_id=p["meta"].get("parent_id"),
+        )
+        for p in passages
+    ]
     return QueryResponse(
         prompt=prompt,
         sources=[p["id"] for p in passages],
+        steps=steps,
     )
